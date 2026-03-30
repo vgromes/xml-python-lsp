@@ -1,25 +1,79 @@
-# LSP Example for Embedded Language using Request Forwarding
+# xml-python-lsp
 
-Heavily documented sample code for https://code.visualstudio.com/api/language-extensions/embedded-languages#request-forwarding
+A VS Code extension that provides Python autocompletion inside `<exec>...</exec>` tags in XML files, using embedded language request forwarding to the Python LSP.
 
-## Functionality
+## How It Works
 
-This extension contributes a new language, `html1`. The new language is for illustration purpose and has basic syntax highlighting.
+When your cursor is inside an `<exec>` block in an XML file, the extension:
 
-This Language Server works for `html1` file. HTML1 is like HTML file but has file extension `.html1`. You can create a `test.html1` file to play with below functionalities:
+1. Extracts the Python code from all `<exec>` regions, replacing everything else with whitespace to preserve line/character offsets.
+2. Optionally prepends the contents of a configured Python source file (`source.py`) to act as a shared completion context.
+3. Forwards the completion request to the active Python LSP (e.g., Pylance / Jedi) against a virtual `.py` document.
+4. Translates the returned completion item ranges back to the original XML coordinates before rendering them.
 
-- Completions for HTML
-- Completions for CSS in `<style>` tag
+Outside of `<exec>` tags, the extension falls back to standard XML LSP behavior.
 
-## Running the Sample
+## Setup
 
-- Run `npm install` in this folder. This installs all necessary npm modules in both the client and server folder
-- Open VS Code on this folder.
-- Press Ctrl+Shift+B to compile the client and server.
-- Switch to the Debug viewlet.
-- Select `Launch Client` from the drop down.
-- Run the launch config.
-- If you want to debug the server as well use the launch configuration `Attach to Server`
-- In the [Extension Development Host] instance of VSCode, open a HTML document
-  - Type `<d|` to try HTML completion
-  - Type `<style>.foo { c| }</style>` to try CSS completion
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+This installs dependencies for the root, client, and server packages.
+
+### 2. Compile
+
+```bash
+npm run compile
+```
+
+Or use `Ctrl+Shift+B` in VS Code to watch-compile.
+
+### 3. Launch the extension
+
+Open the **Run and Debug** panel (`Ctrl+Shift+D`), select **Client + Server**, and press the green play button. A new Extension Development Host window will open.
+
+## Configuration
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `xmlPython.sourceFile` | `string` | `""` | Path (absolute or workspace-relative) to a Python file whose contents are prepended to the virtual document, making its classes and functions available for completion inside `<exec>` tags. |
+| `xmlPython.ignoreDiagnostics` | `string[]` | `[]` | List of diagnostic codes or message strings to suppress (e.g. `"reportUndefinedVariable"`). |
+
+### Example workspace settings
+
+```json
+{
+    "xmlPython.sourceFile": "source.py"
+}
+```
+
+## Usage
+
+1. Open (or create) an XML file in the Extension Development Host.
+2. Add `<exec>` tags and start typing Python inside them:
+
+```xml
+<root>
+    <exec>TestClass</exec>
+</root>
+```
+
+3. Press `Ctrl+Space` to trigger autocomplete. If `xmlPython.sourceFile` points to a file that defines `TestClass`, it will appear as a suggestion.
+
+### Source file context example
+
+`source.py`:
+```python
+class TestClassFromSource:
+    def hello_world(self):
+        pass
+```
+
+With `xmlPython.sourceFile` set to `source.py`, typing `Test` inside any `<exec>` tag and pressing `Ctrl+Space` will suggest `TestClassFromSource`.
+
+## Debugging
+
+To also debug the server process, use the **Attach to Server** launch configuration after the client is running.

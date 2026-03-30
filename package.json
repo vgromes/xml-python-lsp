@@ -19,6 +19,20 @@
 	],
 	"main": "./client/out/extension",
 	"contributes": {
+		"languages": [
+			{
+				"id": "xml",
+				"extensions": [".xml"],
+				"aliases": ["XML", "xml"]
+			}
+		],
+		"grammars": [
+			{
+				"language": "xml",
+				"scopeName": "text.xml",
+				"path": "./syntaxes/xml.tmLanguage.json"
+			}
+		],
 		"configuration": {
 			"type": "object",
 			"title": "XML Python Configuration",
@@ -26,6 +40,7 @@
 				"xmlPython.sourceFile": {
 					"type": "string",
 					"default": "",
+					"scope": "resource",
 					"description": "Path to a Python file to act as the global completion context for <exec> tags in XML."
 				},
 				"xmlPython.ignoreDiagnostics": {
@@ -34,6 +49,7 @@
 						"type": "string"
 					},
 					"default": [],
+					"scope": "resource",
 					"description": "List of diagnostic error codes or messages to ignore (e.g. 'reportUndefinedVariable' or 'reportGeneralTypeIssues')."
 				}
 			}
